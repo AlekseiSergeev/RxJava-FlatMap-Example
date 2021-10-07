@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">RxJava-FlatMap-Example</string>
+    <string name="this_is_a_title">this is a title</string>
 </resources>

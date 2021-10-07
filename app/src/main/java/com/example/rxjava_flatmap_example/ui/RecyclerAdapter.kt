@@ -1,16 +1,18 @@
-package com.example.rxjava_flatmap_example
+package com.example.rxjava_flatmap_example.ui
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rxjava_flatmap_example.databinding.LayoutPostListItemBinding
 import com.example.rxjava_flatmap_example.models.Post
 import java.util.*
 
 
-class RecyclerAdapter : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
+class RecyclerAdapter : ListAdapter<Post, RecyclerAdapter.MyViewHolder>(PostDiffCallback()) {
     private var posts: List<Post> = ArrayList()
+    private var listener: OnPostClickListener? = null
     private lateinit var binding: LayoutPostListItemBinding
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -32,7 +34,7 @@ class RecyclerAdapter : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
 
     fun setPosts(posts: List<Post>) {
         this.posts = posts
-        notifyDataSetChanged()
+        submitList(posts)
     }
 
     fun updatePost(post: Post) {
@@ -49,28 +51,36 @@ class RecyclerAdapter : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
         return posts
     }
 
+    interface OnPostClickListener {
+        fun onPostClick(position: Int)
+    }
+
+    fun setOnItemClickListener(listener: OnPostClickListener) {
+        this.listener = listener
+    }
+
+
     inner class MyViewHolder(binding: LayoutPostListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         private val title = binding.title
-        private val numComments = binding.numComments
-        private val progressBar = binding.progressBar
-        fun bind(post: Post) {
-            title.text = post.title
-            if (post.comments == null) {
-                showProgressBar(true)
-                numComments.text = ""
-            } else {
-                showProgressBar(false)
-                numComments.text = ((post.comments)?.size).toString()
+
+        init {
+            title.setOnClickListener {
+                listener?.onPostClick(bindingAdapterPosition)
             }
         }
 
-        private fun showProgressBar(showProgressBar: Boolean) {
-            if (showProgressBar) {
-                progressBar.visibility = View.VISIBLE
-            } else {
-                progressBar.visibility = View.GONE
-            }
+        fun bind(post: Post) {
+            title.text = post.title
         }
+
     }
+}
+
+class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
+    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean =
+        oldItem.id == newItem.id
+
+    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean =
+        oldItem.title == newItem.title
 }
